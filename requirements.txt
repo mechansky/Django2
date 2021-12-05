@@ -39,5 +39,5 @@ virtualenv==20.10.0
 wcwidth==0.2.5
 gunicorn
 psycopg2-binary
-
+social_django
 
