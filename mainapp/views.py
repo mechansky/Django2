@@ -2,11 +2,33 @@ import random
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, get_object_or_404
-
 from basketapp.models import Basket
 from mainapp.models import Product, ProductCategory
 
+from django.conf import settings
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page, never_cache
 
+def get_links_menu():
+    if settings.LOW_CACHE:
+        key = 'categories'
+        links_menu = cache.get(key)
+        if links_menu is None:
+            links_menu = ProductCategory.object.filter(is_active=True)
+            cache.set(key, links_menu)
+
+        return links_menu
+    return ProductCategory.object.filter(is_active=True)
+
+def get_category(pk):
+    if settings.LOW_CACHE:
+        key = f'category_{pk}'
+        category_item = cache.get(key)
+        if category_item is None:
+            category_item = get_object_or_404(ProductCategory, pk=pk)
+            cache.set(key, category_item)
+        return category_item
+    return get_object_or_404(ProductCategory, pk=pk)
 
 def get_hot_product():
     return random.sample(list(Product.objects.all()), 1)[0]
@@ -18,7 +40,7 @@ def get_same_products(hot_product):
 
 # Create your views here.
 
-
+@never_cache
 def index(request):
     context = {
         'title': 'Главная',
@@ -34,6 +56,7 @@ def contact(request):
     return render(request, 'mainapp/contact.html', context)
 
 
+@cache_page(3600)
 def products(request, pk=None, page=1):
     links_menu = ProductCategory.objects.all()
     if pk is not None:
