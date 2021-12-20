@@ -1,6 +1,7 @@
 import random
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from basketapp.models import Basket
 from mainapp.models import Product, ProductCategory
@@ -42,9 +43,13 @@ def get_same_products(hot_product):
 
 @never_cache
 def index(request):
+    is_home = Q(category__name='дом')
+    is_office = Q(category__name='офис')
     context = {
         'title': 'Главная',
-        'products': Product.objects.all()[:4],
+        'products': Product.objects.filter(
+            is_home | is_office
+        ),
     }
     return render(request, 'mainapp/index.html', context)
 

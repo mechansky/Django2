@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
 from django.template.loader import render_to_string
@@ -18,6 +19,7 @@ def basket(request):
 
     return render(request, 'basketapp/basket.html', context)
 
+
 @login_required
 def add(request, pk):
     product_item = get_object_or_404(Product, pk=pk)
@@ -28,7 +30,14 @@ def add(request, pk):
         basket_item = Basket(product=product_item, user=request.user)
 
     basket_item.quantity += 1
+    #basket_item.quantity += F('quantity') + 1
     basket_item.save()
+
+    """
+    update basketapp_basket set quantity = 2 where id=3;
+    
+    update basketapp_basket set quantity = quantity + 1 where id=3;
+    """
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
